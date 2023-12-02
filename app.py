@@ -1,30 +1,36 @@
 from flask import Flask, render_template, request, jsonify
+from pydantic import basemodel
 import pickle
+import pandas as pd
 
 app = Flask(__name__)
 model = pickle.load(open("models/model_perceptron.pkl", "rb"))
+
+class DiabetesItem(BaseModel):
+    Age : int
+    Sex : int
+    PhysActivity : int
+    Fruits : int
+    Veggies : int
+    HvyAlcoholConsump : int
+    Smoker : int
+    HighBP :int 
+    HighChol : int
+    BMI : int
+    GenHlth : int
+    PhysHlth : int
+    DiffWalk : int
+    HeartDiseaseorAttack : int
+
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
 @app.route("/predict", methods=["POST"])
-def predict():
-    age = request.form.get("Age")
-    sex = request.form.get("Sex")
-    physActivity = request.form.get("PhysActivity")
-    fruits = request.form.get("Fruits")
-    veggies = request.form.get("Veggies")
-    hvyAlcoholConsump = request.form.get("HvyAlcoholConsump")
-    smoker = request.form.get("Smoker")
-    highBP = request.form.get("HighBP")
-    highChol = request.form.get("HighChol")
-    bMI = request.form.get("BMI")
-    genHlth = request.form.get("GenHlth")
-    physHlthad = request.form.get("PhysHlth")
-    diffWalk = request.form.get("DiffWalk")
-    heartDiseaseorAttack = request.form.get("HeartDiseaseorAttack")
-    prediction = model.predict([[age, sex, physActivity, fruits, veggies, hvyAlcoholConsump, smoker, highBP, highChol, bMI, genHlth, physHlthad, diffWalk, heartDiseaseorAttack]])
+def predict(item : DiabetesItem):
+    df  = pd.DataFrame([ item.dict().values()], columns=item.dict().keys())
+    prediction = model.predict(df)
     return render_template("index.html", predictions = prediction)
 
 @app.route('/api/predict', methods=['POST'])
